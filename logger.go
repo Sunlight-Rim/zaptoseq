@@ -96,7 +96,7 @@ func (h *Hook) NewCore(zapconfig zap.Config) zapcore.Core {
 
 func (h *Hook) Write(p []byte) (n int, err error) {
 	// Since we immediately return, we need to make a copy of the payload that takes time to be sent
-	req, err := http.NewRequest(http.MethodPost, h.seqApiURL, bytes.NewBuffer(append(make([]byte, len(p)), p...)))
+	req, err := http.NewRequest(http.MethodPost, h.seqApiURL, bytes.NewBuffer(append(make([]byte, 0, len(p)), p...)))
 	if err != nil {
 		return 0, errors.Wrap(ErrRequestCreation, err.Error())
 	}
