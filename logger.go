@@ -23,7 +23,7 @@ type Hook struct {
 	seqApiHeader http.Header
 	wg           *sync.WaitGroup
 
-	// Fallback-logger in case if Seq request fails
+	// Fallback-logger in case if Seq request fails.
 	fallbackLogger *zap.Logger
 }
 
@@ -51,7 +51,7 @@ func NewHook(sequrl, token string) (*Hook, error) {
 	}, nil
 }
 
-// EnableFallbackLogs turns on sending Seq request errors to the console.
+// EnableFallbackLogs turns on sending errors during Seq request to the console.
 func (h *Hook) EnableFallbackLogs() {
 	h.fallbackLogger = zap.New(zapcore.NewCore(
 		zapcore.NewConsoleEncoder(zap.NewDevelopmentConfig().EncoderConfig),
@@ -60,7 +60,7 @@ func (h *Hook) EnableFallbackLogs() {
 	))
 }
 
-// DisableFallbackLogs turns off sending Seq request errors to the console.
+// DisableFallbackLogs turns off sending errors during Seq request to the console.
 func (h *Hook) DisableFallbackLogs() {
 	h.fallbackLogger = nil
 }
@@ -78,9 +78,9 @@ func (h *Hook) NewLoggerWith(zapconfig zap.Config, cores ...zapcore.Core) *zap.L
 	)
 }
 
-// NewCore returns Zap core with sending logs to Seq.
+// NewCore returns Zap core that sending logs to Seq.
 func (h *Hook) NewCore(zapconfig zap.Config) zapcore.Core {
-	// Seq requiremen fields and value format
+	// Seq requirement fields and values format
 	zapconfig.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 	zapconfig.EncoderConfig.EncodeLevel = zapcore.LowercaseLevelEncoder
 	zapconfig.EncoderConfig.LevelKey = "@l"
@@ -138,7 +138,7 @@ func (h *Hook) Write(p []byte) (n int, err error) {
 	return len(p), nil // always success (but it might have failed)
 }
 
-// Wait is waits for all requests to be completed.
+// Wait until all requests are completed.
 func (h *Hook) Wait() {
 	h.wg.Wait()
 }
