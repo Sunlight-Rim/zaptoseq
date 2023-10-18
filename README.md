@@ -21,7 +21,7 @@ With one core:
 
     log.Info("Hello, World!")
 
-	hook.Wait()
+    hook.Wait()
 ```
 Note: token can be an empty string.
 
@@ -45,7 +45,7 @@ With multiple cores:
     // Will be sent to both Seq and stdout
     log.Info("Hello, World!")
 
-	hook.Wait()
+    hook.Wait()
 ```
 \
 With multiple cores without DI:
@@ -71,5 +71,5 @@ With multiple cores without DI:
     // Will be sent to both Seq and stdout
     log.Info("Hello, World!")
 
-	hook.Wait()
+    hook.Wait()
 ```
