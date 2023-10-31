@@ -121,21 +121,19 @@ func (h *Hook) Write(p []byte) (n int, err error) {
 		}
 
 		// If not, then parse a message
-		content, err := io.ReadAll(resp.Body)
-		if err != nil {
+		if content, err := io.ReadAll(resp.Body); err != nil {
 			h.fallbackLogger.Error(
 				"Failed reading Seq response body",
 				zap.Error(errors.Wrapf(err, "status code %d", resp.StatusCode)),
 			)
-			return
+		} else {
+			h.fallbackLogger.Error(
+				"Seq error",
+				zap.String("error-message", gjson.GetBytes(content, "Error").String()),
+				zap.String("raw-content", string(content)),
+				zap.String("content-type", resp.Header.Get("Content-Type")),
+			)
 		}
-
-		h.fallbackLogger.Error(
-			"Seq error",
-			zap.String("error-message", gjson.GetBytes(content, "Error").String()),
-			zap.String("raw-content", string(content)),
-			zap.String("content-type", resp.Header.Get("Content-Type")),
-		)
 	}()
 
 	return len(p), nil // Always success (but request might have failed)
