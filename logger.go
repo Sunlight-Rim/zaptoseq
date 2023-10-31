@@ -1,3 +1,5 @@
+// Package zaptoseq provideess a hook to send logs from Zap logger to Seq (https://datalust.co/seq).
+
 package zaptoseq
 
 import (
@@ -23,8 +25,7 @@ type Hook struct {
 	seqApiHeader http.Header
 	wg           *sync.WaitGroup
 
-	// Fallback-logger in case if Seq request fails.
-	fallbackLogger *zap.Logger
+	fallbackLogger *zap.Logger // Fallback-logger in case if Seq request fails
 }
 
 // NewHook creates a hook to Seq.
@@ -33,8 +34,9 @@ func NewHook(sequrl, token string) (*Hook, error) {
 		return nil, ErrEmptyURL
 	}
 
-	if rurl := []rune(sequrl); rurl[len(rurl)-1] == '/' {
-		sequrl = string(rurl[:len(rurl)-1])
+	// Remove last URL slash.
+	if sequrl[len(sequrl)-1] == '/' {
+		sequrl = string(sequrl[:len(sequrl)-1])
 	}
 
 	header := make(http.Header)
@@ -72,10 +74,7 @@ func (h *Hook) NewLogger(zapconfig zap.Config) *zap.Logger {
 
 // NewLoggerWith builts a Zap-logger that send logs to Seq and also to other cores.
 func (h *Hook) NewLoggerWith(zapconfig zap.Config, cores ...zapcore.Core) *zap.Logger {
-	return zap.New(
-		zapcore.NewTee(append(cores, h.NewCore(zapconfig))...),
-		zap.AddCaller(),
-	)
+	return zap.New(zapcore.NewTee(append(cores, h.NewCore(zapconfig))...))
 }
 
 // NewCore returns Zap core that sending logs to Seq.
@@ -94,6 +93,7 @@ func (h *Hook) NewCore(zapconfig zap.Config) zapcore.Core {
 	return zapcore.NewCore(jsonencoder, zapcore.AddSync(h), zap.DebugLevel)
 }
 
+// Write writes logs to Seq and implements a Writer interface.
 func (h *Hook) Write(p []byte) (n int, err error) {
 	// Since we immediately return, we need to make a copy of the payload that takes time to be sent
 	req, err := http.NewRequest(http.MethodPost, h.seqApiURL, bytes.NewBuffer(append(make([]byte, 0, len(p)), p...)))
@@ -123,7 +123,10 @@ func (h *Hook) Write(p []byte) (n int, err error) {
 		// If not, then parse a message
 		content, err := io.ReadAll(resp.Body)
 		if err != nil {
-			h.fallbackLogger.Error("Failed reading Seq response body", zap.Error(err))
+			h.fallbackLogger.Error(
+				"Failed reading Seq response body",
+				zap.Error(errors.Wrapf(err, "status code %d", resp.StatusCode)),
+			)
 			return
 		}
 
@@ -135,7 +138,7 @@ func (h *Hook) Write(p []byte) (n int, err error) {
 		)
 	}()
 
-	return len(p), nil // always success (but it might have failed)
+	return len(p), nil // Always success (but request might have failed)
 }
 
 // Wait until all requests are completed.

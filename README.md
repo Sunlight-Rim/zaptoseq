@@ -12,12 +12,12 @@ import zaptoseq "github.com/Sunlight-Rim/zaptoseq"
 \
 With one core:
 ```go
-    hook, err := zaptoseq.NewLogger("http://localhost:5341", "token")
+    hook, err := zaptoseq.NewHook("http://localhost:5341", "token")
     if err != nil {
    	   panic(err)
     }
 
-    log := hook.Build(zap.NewDevelopmentConfig())
+    log := hook.NewLogger(zap.NewDevelopmentConfig())
 
     log.Info("Hello, World!")
 
