@@ -1,6 +1,6 @@
 # Zap to Seq
 
-A hook for sending [Zap](https://pkg.go.dev/go.uber.org/zap) logs to [Seq](https://datalust.co/seq). \
+A hook for sending [Zap](https://pkg.go.dev/go.uber.org/zap) logs to [Seq](https://datalust.co/seq).
 
 ### Documentation
 
