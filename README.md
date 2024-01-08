@@ -1,7 +1,10 @@
 # Zap to Seq
 
 A hook for sending [Zap](https://pkg.go.dev/go.uber.org/zap) logs to [Seq](https://datalust.co/seq). \
-Original package author: https://github.com/eliezedeck/gozap2seq
+
+### Documentation
+
+Code documentation avaliable at [godoc](https://pkg.go.dev/github.com/Sunlight-Rim/zaptoseq).
 
 ### Usage
 
