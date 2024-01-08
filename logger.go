@@ -1,19 +1,18 @@
-// Package zaptoseq provideess a hook to send logs from Zap logger to Seq (https://datalust.co/seq).
-
+// Package zaptoseq provides a hook to send logs from Zap logger to Seq (https://datalust.co/seq).
 package zaptoseq
 
 import (
-	"github.com/pkg/errors"
-	"github.com/tidwall/gjson"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
 	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var ErrEmptyURL = errors.New("empty Seq url")
@@ -25,7 +24,8 @@ type Hook struct {
 	seqApiHeader http.Header
 	wg           *sync.WaitGroup
 
-	fallbackLogger *zap.Logger // Fallback-logger in case if Seq request fails
+	// Fallback-logger in case if Seq request fails
+	fallbackLogger *zap.Logger
 }
 
 // NewHook creates a hook to Seq.
@@ -88,12 +88,10 @@ func (h *Hook) NewCore(zapconfig zap.Config) zapcore.Core {
 	zapconfig.EncoderConfig.CallerKey = "caller"
 	zapconfig.EncoderConfig.StacktraceKey = "trace"
 
-	jsonencoder := zapcore.NewJSONEncoder(zapconfig.EncoderConfig)
-
-	return zapcore.NewCore(jsonencoder, zapcore.AddSync(h), zap.DebugLevel)
+	return zapcore.NewCore(zapcore.NewJSONEncoder(zapconfig.EncoderConfig), zapcore.AddSync(h), zap.DebugLevel)
 }
 
-// Write writes logs to Seq and implements a Writer interface.
+// Write writes log to Seq. Implements the Writer interface.
 func (h *Hook) Write(p []byte) (n int, err error) {
 	// Since we immediately return, we need to make a copy of the payload that takes time to be sent
 	req, err := http.NewRequest(http.MethodPost, h.seqApiURL, bytes.NewBuffer(append(make([]byte, 0, len(p)), p...)))
@@ -121,19 +119,21 @@ func (h *Hook) Write(p []byte) (n int, err error) {
 		}
 
 		// If not, then parse a message
-		if content, err := io.ReadAll(resp.Body); err != nil {
+		content, err := io.ReadAll(resp.Body)
+		if err != nil {
 			h.fallbackLogger.Error(
 				"Failed reading Seq response body",
 				zap.Error(errors.Wrapf(err, "status code %d", resp.StatusCode)),
 			)
-		} else {
-			h.fallbackLogger.Error(
-				"Seq error",
-				zap.String("error-message", gjson.GetBytes(content, "Error").String()),
-				zap.String("raw-content", string(content)),
-				zap.String("content-type", resp.Header.Get("Content-Type")),
-			)
+			return
 		}
+
+		h.fallbackLogger.Error(
+			"Seq error",
+			zap.String("error-message", gjson.GetBytes(content, "Error").String()),
+			zap.String("raw-content", string(content)),
+			zap.String("content-type", resp.Header.Get("Content-Type")),
+		)
 	}()
 
 	return len(p), nil // Always success (but request might have failed)
